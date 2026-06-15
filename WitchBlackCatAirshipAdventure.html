@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>魔女と黒猫の飛行船冒険</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --parchment:   #f2e8d5;
+    --parchment-dark: #e0ceae;
+    --ink:         #2b1d0e;
+    --ink-faded:   #6b4f2e;
+    --sea:         #4a7fa5;
+    --sea-light:   #8ab4cc;
+    --land:        #7a9e5f;
+    --island:      #a8b870;
+    --desert:      #c8a85a;
+    --mountain:    #8a7a6e;
+    --forest:      #4a7a40;
+    --lake:        #5a9ab0;
+    --country:     #c06030;
+    --tribe:       #9060a0;
+    --current:     #e03030;
+    --gold:        #c8922a;
+    --gold-light:  #e8c060;
+    --shadow:      rgba(43,29,14,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1008;
+    font-family: 'Noto Serif JP', serif;
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+  }
+
+  /* ── TITLE BAR ── */
+  header {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  header h1 {
+    font-size: 1.55rem;
+    color: var(--gold-light);
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    font-weight: 700;
+  }
+  header p {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--parchment-dark);
+    font-size: 0.72rem;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+  /* ── START SCREEN ── */
+  #start-screen {
+    max-width: 420px;
+    background: var(--parchment);
+    border-radius: 4px;
+    border: 2px solid var(--gold);
+    padding: 28px 32px;
+    box-shadow: 0 8px 32px var(--shadow);
+    gap: 16px;
+  }
+  #start-screen h2 {
+    text-align: center;
+    color: var(--ink);
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  #start-screen p {
+    font-size: 0.82rem;
+    color: var(--ink-faded);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .field-label {
+    font-size: 0.78rem;
+    color: var(--ink-faded);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .field-group { display: flex; flex-direction: column; width: 100%; }
+  input[type="text"] {
+    background: var(--parchment-dark);
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+  }
+  input[type="text"]:focus { border-color: var(--country); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 3px;
+    padding: 10px 24px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.05em;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--gold-light); }
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--parchment-dark);
+    margin: 2px 0;
+  }
+
+  /* ── GAME SCREEN ── */
+  #game-screen {
+    width: 100%;
+    max-width: 980px;
+    gap: 12px;
+  }
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* ── MAP PANEL ── */
+  .map-panel {
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 12px;
+    box-shadow: 0 4px 18px var(--shadow);
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .map-panel h3 {
+    font-size: 0.78rem;
+    color: var(--ink-faded);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--parchment-dark);
+    padding-bottom: 6px;
+  }
+  #map-canvas {
+    width: 100%;
+    border: 1px solid var(--parchment-dark);
+    border-radius: 2px;
+    cursor: default;
+    background: #3a6e98;
+  }
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 0.68rem;
+    color: var(--ink-faded);
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── INFO PANEL ── */
+  .info-panel {
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 14px;
+    box-shadow: 0 4px 18px var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .info-section h4 {
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .coord-line {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+  .terrain-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 4px;
+    color: white;
+  }
+  .site-info {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .site-info .label {
+    color: var(--ink-faded);
+    font-size: 0.7rem;
+  }
+  .site-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .race-bar-wrap { margin-top: 4px; }
+  .race-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+    font-size: 0.7rem;
+  }
+  .race-name { width: 64px; flex-shrink: 0; color: var(--ink-faded); }
+  .race-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--parchment-dark);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .race-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--country);
+    transition: width 0.4s;
+  }
+  .race-pct { width: 28px; text-align: right; color: var(--ink); }
+
+  /* ── CAT DIALOG ── */
+  .cat-box {
+    background: var(--parchment-dark);
+    border: 1px solid var(--parchment-dark);
+    border-radius: 4px;
+    padding: 10px 12px;
+    position: relative;
+  }
+  .cat-box::before {
+    content: '🐈';
+    font-size: 1.1rem;
+    position: absolute;
+    top: -14px;
+    left: 10px;
+  }
+  #cat-dialog {
+    font-size: 0.8rem;
+    color: var(--ink);
+    line-height: 1.65;
+    min-height: 40px;
+    font-style: italic;
+  }
+
+  /* ── QUEST BOX ── */
+  .quest-box {
+    background: #fdf5e0;
+    border: 1px dashed var(--gold);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .quest-box h4 {
+    font-size: 0.68rem;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #quest-text {
+    font-size: 0.78rem;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  #quest-hint {
+    font-size: 0.72rem;
+    color: var(--ink-faded);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ── EXPLORE STATS ── */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    font-size: 0.72rem;
+    color: var(--ink-faded);
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--parchment-dark);
+    border-radius: 3px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--ink);
+    display: block;
+  }
+
+  /* ── CONTROLS PANEL ── */
+  .controls-panel {
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 14px;
+    box-shadow: 0 4px 18px var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+    gap: 4px;
+    justify-content: center;
+  }
+  .dpad-btn {
+    width: 48px; height: 48px;
+    background: var(--parchment-dark);
+    border: 1.5px solid var(--gold);
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, transform 0.1s;
+    color: var(--ink);
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 700;
+  }
+  .dpad-btn:hover { background: var(--gold-light); }
+  .dpad-btn:active { transform: scale(0.93); background: var(--gold); }
+  .dpad-btn.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+
+  .action-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .btn-action {
+    background: var(--parchment-dark);
+    border: 1.5px solid var(--gold);
+    border-radius: 3px;
+    padding: 6px 12px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.78rem;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.12s;
+    font-weight: 700;
+  }
+  .btn-action:hover { background: var(--gold-light); }
+
+  /* ── LOG PANEL ── */
+  .log-panel {
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 18px var(--shadow);
+    width: 100%;
+  }
+  .log-panel h3 {
+    font-size: 0.72rem;
+    color: var(--ink-faded);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--parchment-dark);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+  }
+  #event-log {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--ink-faded);
+    max-height: 100px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    padding-right: 4px;
+  }
+  #event-log::-webkit-scrollbar { width: 4px; }
+  #event-log::-webkit-scrollbar-thumb { background: var(--parchment-dark); }
+  .log-entry { padding: 1px 0; border-bottom: 1px solid var(--parchment-dark); }
+  .log-entry.highlight { color: var(--country); font-weight: bold; }
+  .log-entry.quest { color: var(--gold); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 24px 28px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .modal-box h3 {
+    color: var(--country);
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+  }
+  .modal-box p { font-size: 0.82rem; color: var(--ink); line-height: 1.7; margin-bottom: 8px; }
+  .modal-box button {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  /* ── TYPEWRITER ── */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor { display: inline-block; width: 2px; height: 0.9em; background: var(--ink); vertical-align: text-bottom; animation: blink 0.7s infinite; margin-left: 1px; }
+
+  /* ── QUEST COMPLETE FLASH ── */
+  @keyframes questFlash { 0%{opacity:0;transform:scale(0.8)} 20%{opacity:1;transform:scale(1.05)} 80%{opacity:1} 100%{opacity:0;transform:scale(1)} }
+  .quest-flash {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: var(--gold);
+    color: var(--ink);
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 18px 40px;
+    border-radius: 4px;
+    z-index: 200;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .quest-flash.show { display: block; animation: questFlash 2s forwards; }
+
+  @media (max-width: 700px) {
+    .game-layout { grid-template-columns: 1fr; grid-template-rows: auto; }
+    .map-panel { grid-row: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✦ 魔女と黒猫の飛行船冒険 ✦</h1>
+  <p>AIRSHIP ADVENTURE — WITCH &amp; BLACK CAT</p>
+</header>
+
+<!-- START SCREEN -->
+<div id="start-screen" class="screen active">
+  <h2>旅の始まり</h2>
+  <p>未知の世界が地平線の向こうに広がっている。<br>飛行船に乗り込み、黒猫と共に旅立とう。</p>
+  <div class="divider"></div>
+  <div class="field-group">
+    <label class="field-label" for="witch-input">魔女の名前</label>
+    <input type="text" id="witch-input" placeholder="例：イザベラ" maxlength="20">
+  </div>
+  <div class="field-group">
+    <label class="field-label" for="cat-input">黒猫の名前</label>
+    <input type="text" id="cat-input" placeholder="例：クロ" maxlength="20">
+  </div>
+  <button class="btn-primary" id="start-btn">✦ 飛行船を出発させる ✦</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+  <div class="game-layout">
+
+    <!-- MAP -->
+    <div class="map-panel">
+      <h3>✦ 探索地図</h3>
+      <canvas id="map-canvas" width="580" height="380"></canvas>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4a7fa5"></div>海域</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7a9e5f"></div>大陸</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a8b870"></div>島</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c06030"></div>国家</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9060a0"></div>部族</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a7a40"></div>森</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c8a85a"></div>砂漠</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8a7a6e"></div>山脈</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5a9ab0"></div>湖</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e03030"></div>現在地</div>
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info-panel">
+      <div class="info-section">
+        <h4>現在地</h4>
+        <div class="coord-line" id="coord-display">赤道 / 本初子午線</div>
+        <div id="terrain-badge" class="terrain-badge" style="background:#4a7fa5">海域</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="info-section" id="site-section">
+        <h4>発見情報</h4>
+        <div class="site-info" id="site-info">
+          <span style="color:var(--ink-faded);font-style:italic">まだ何も発見していない</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- CAT DIALOG -->
+      <div class="cat-box">
+        <div id="cat-dialog">ニャー……出発の準備はできているか？</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- QUEST -->
+      <div class="quest-box">
+        <h4>★ 現在のクエスト</h4>
+        <div id="quest-text">—</div>
+        <div id="quest-hint"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-val" id="explore-pct">0%</span>
+          探索率
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" id="move-count">0</span>
+          移動回数
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" id="find-count">0</span>
+          発見数
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-panel">
+      <h4 style="font-size:0.7rem;color:var(--ink-faded);letter-spacing:0.12em;text-transform:uppercase;text-align:center">方向操作</h4>
+      <div class="dpad">
+        <div class="dpad-btn empty"></div>
+        <button class="dpad-btn" id="btn-n" title="北（N）">↑</button>
+        <div class="dpad-btn empty"></div>
+        <button class="dpad-btn" id="btn-w" title="西（W）">←</button>
+        <div class="dpad-btn empty" style="background:var(--parchment-dark);border:1.5px solid var(--gold);border-radius:4px;font-size:0.6rem;color:var(--ink-faded);display:flex;align-items:center;justify-content:center">現在地</div>
+        <button class="dpad-btn" id="btn-e" title="東（E）">→</button>
+        <div class="dpad-btn empty"></div>
+        <button class="dpad-btn" id="btn-s" title="南（S）">↓</button>
+        <div class="dpad-btn empty"></div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-action" id="btn-quest">★ クエスト確認</button>
+        <button class="btn-action" id="btn-hint">🐾 ヒント</button>
+        <button class="btn-action" id="btn-log">📜 発見リスト</button>
+        <button class="btn-action" id="btn-help">？ ヘルプ</button>
+        <button class="btn-action" id="btn-new" style="border-color:var(--country);color:var(--country)">↺ 新ゲーム</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EVENT LOG -->
+  <div class="log-panel">
+    <h3>✦ 航海日誌</h3>
+    <div id="event-log"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-help">
+  <div class="modal-box">
+    <h3>ヘルプ</h3>
+    <p><b>操作方法</b><br>
+    ↑↓←→ ボタンまたはキーボードの N/S/E/W キーで10度ずつ移動。</p>
+    <p><b>マップについて</b><br>
+    マップには発見済みの場所のみ表示される。霧の中を自分で探索しよう。</p>
+    <p><b>クエスト</b><br>
+    特定の国家（特産品または噂で特定）を見つけるのが目標。<br>黒猫が方角のヒントをくれる（少し曖昧だけど）。</p>
+    <p><b>緯度の制限</b><br>北緯70° / 南緯70° が限界。それ以上は飛べない。</p>
+    <button class="btn-primary" onclick="closeModal('modal-help')">閉じる</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-log">
+  <div class="modal-box">
+    <h3>発見済みリスト</h3>
+    <div id="modal-log-content" style="font-size:0.75rem;max-height:320px;overflow-y:auto;line-height:1.9;color:var(--ink)"></div>
+    <button class="btn-primary" onclick="closeModal('modal-log')" style="margin-top:14px">閉じる</button>
+  </div>
+</div>
+
+<div class="quest-flash" id="quest-flash">★ クエスト達成！ ★</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA TABLES
+// ═══════════════════════════════════════════════════════
+const NAME_FRONT = [ "アル", "バル", "ミア", "カラン", "ソル", "ニア", "ウル", "聖",
+    "パパ", "ルナ", "キキ", "モグ", "タタ", "ハル", "ドド", "アストラ",
+    "ヴィラン", "ナヴィア", "カルロス", "ドラケン", "ゼフィール", "ソレン", "ラヴェン", "オスタ",
+    "ベルガ", "ロラン", "フェレン", "アルマン", "イスカ", "ナサル", "アルデ", "ミラ",
+    "セレン", "ヴァレン", "オーロ", "エルド", "リヴィア", "カストル", "ネメア", "ヴェルド",
+    "クロノ", "エルシア", "ファルク", "ルミナ", "グラン", "レオン", "アルヴィス", "ヴェガ",
+    "ノルド", "セレス", "アーク", "エデン", "ゼノ", "アルカディア", "ミストラ", "ヴァルハラ",
+    "ノヴァ", "セフィア", "エルドラ", "アヴァロン", "レグナ", "カイゼル", "オルディア", "フェルン"];
+
+const NAME_BACK  = ["王国", "連邦", "首長国連邦", "小公国", "帝国", "シア",
+"スタン", "国", "共和国", "人民共和国", "絶対に独裁ではない民主国家", "合衆国",
+"ニア", "ビア", "リア", "ロニア", "同盟", "邦",
+"民国", "首長国", "王国", "アスタン", "部族連盟", "自治領",
+"大公国", "汗国", "公国", "ア公国", "反官僚主義官僚共和国"];
+
+const CIVIL_SYSTEMS  = ["魔法禁止国家", "都市国家同盟", "祭司国家", "政教一致国家", "商会連盟",
+"奴隷制", "試験主義", "スチームパンク", "魔法至上主義", "芸術家の王",
+"一番ホラを吹いた者が大臣", "世襲制", "恒久的暫定移行政府", "全民持ち回り貴族制", "農奴制",
+"永久改革主義", "会議で全て解決", "勇者募集制度",
+"自由主義", "官僚抽選制", "猫貴族制", "毎月革命制度",
+"王権神授制", "大声優先主義", "キーボード議会", "永遠に草案段階の共和国",
+"常時非常事態制", "荘園制", "二重王政", "郡県制", "反燃料軍団主義",
+"騎士封建制", "無限再任暫定政府", "魔法天命論", "魔力共有制度", "燃料軍団傀儡国家"];
+const TRIBE_SYSTEMS  = ["氏族制度", "無秩序社会", "男性器崇拝", "うんち崇拝",
+"じゃんけん分配制度", "船荷信仰", "シャーマン制度", "共有制度",
+"カピバラ崇拝", "長老会議", "バナナ貨幣制度", "キャッサバ信仰",
+"亀甲占い", "酋長のキノコ神託", "盲目の子供の預言",
+"食人文化", "奇妙な巨石信仰"];
+const RUMORS  = ["火曜日は食事禁止", "野菜を食べるのは不浄", "女性差別がある", "スカンクを崇拝している",
+"犬を食べる", "髪型がネズミの尻尾みたい", "性別はたくさんあると信じている", "同性愛は違法",
+"彼らには苗字がない", "部屋の中で寝てはいけない", "謝るのが大好き", "道端で大小便をする",
+"街中で盛大に屁をこく", "教育大臣が文盲", "腐った豆ジュースを飲む", "猫を差別している",
+"太った大臣を崇拝している", "ゴミ箱が存在しない", "金髪で白い肌のエルフを崇拝している", "教育が法律で禁止されている",
+"性別はたくさんあると信じている", "ここの女性は気性がとても荒い", "私有財産が存在しない", "ゴブリンソーダを飲むのは違法",
+"数千の言語が存在する", "麺を噛み切ってはいけない", "パンダ人料理が好き", "ここの文盲はなぜか誇り高い",
+"外国人は囲まれて見物される", "変な動物を食べるのが好き", "狂ったように愛国的", "男性は複数の妻を持てる",
+"ここの人々は列に並ばない", "古代機械人の法的地位を認めない", "ゴブリンソーダを飲むのは違法", "数百の言語が存在する",
+"尿で洗濯する", "男性に地位がない", "左手で握手してはいけない", "動物が裁判にかけられる",
+"ここの中年男性は腹を出すのが好き", "狂ったように愛国的", "男性は複数の妻を持てる", "ここの人々は列に並ばない",
+"ミイラは薬になると信じている", "この世界は文字ゲームだと主張する哲学者がいる", "鶏肉を食べるのは不浄", "フクロウの入国は禁止",
+"魔女は物を盗むと思っている", "この国の牛の精液を国外へ持ち出すのは違法", 
+"住民は真夜中に首都へ向かって一斉に跪く", "ここの女性は笑うと豚が吠えるような声を出す",
+"ここの人々は生肉を食べるのが好き", "男性はとてもスケベ", "人族を差別している", "ここではなぜかワキガ族を差別しない",
+"太った人を差別している", "魔女を崇拝している", "猫を食べる", "ワキガ族は良い匂いだと思っている",
+"国家元首がワキガ族", "死者に関する祭りが多い", "保健大臣がワキガ族", "夢見遊民のアイドルグループがたくさんいる",
+"トランスジェンダーの人が多い", "穴の開いたズボンが流行している", 
+"汚くて臭いジーンズをかっこいいと思っている", "下着を見せるのがかっこいいと思っている",
+"宮廷会議にサンダルで出席できる", "男性は特にスケベ", "ここのカフェでは会話禁止", "ワキガ族は良い匂いだと思っている",
+"この国では黒死病が流行している", "この国では革命が起きている", "彼らはここの先住民を皆殺しにした", "ここでは過去に大量虐殺が起きた",
+"かつて隣国を侵略した", "かつて隣国に侵略された", "年老いた大臣が毎日ズボンの中で漏らしている", "財産は臭い靴下の数で計算される",
+"法律で毎日二時間の昼寝が義務づけられている", "隣の部族を差別している", "燃料軍団を崇拝している", "この国は古神の残骸を発見したばかり"];
+
+
+const TRIBE_RUMORS = ["よくニヤニヤ笑う", "酋長が同性愛者", "文明人を差別する", "未確認飛行物体を崇拝している", "バカを崇拝している",
+"燃料軍団に虐殺されたことがある", "自分たちの部族が世界の中心だと思っている", "酋長と女祭司に浮名がある", "酋長と男祭司に浮名がある", "魔女を食べる部族",
+"数字の概念がない", "毎年夏におしっこ大会が開かれる", "突然サルの鳴き真似をする", "屁の音の大きさが身分に関係する", "ここの酋長は微積分ができる",
+"緑色の虫ジュースが大好き", "全員が古神の囁きを聞くことができる"];
+const SPECIALTIES = ["クリスタルハイヒール", "激安飛行船キャンバス", "巨大カボチャ", "火炎唐辛子", "空飛ぶ魚",
+"人間そっくりの根菜", "死の菌類トウモロコシ", "透明リンゴ", "光る水晶玉", "魔法コーヒー豆",
+"竜乳チーズ", "皇帝の新しい服", "巨大カタツムリ肉", "ガラスバナナ", "爆発スイカ",
+"ピンク色のトイレットペーパー", "腐らないハンバーガー", "四角いスイカ", "変な漫画", "巨大猿王茶",
+"猫ひげキャンディ", "ワキガ香水", "黒曜石の急須", "虫に変わる草", "歌う魔法トイレ",
+"発酵サメ", "ヤギの睾丸缶詰", "揚げ昆虫", "蛇酒", "喋る箱",
+"合法ドラゴンエッグ", "魔法飛行船", "人工キャットニップ", "騒音ラーメン", "猫語翻訳機",
+"黒曜石の急須", "虫に変わる草", "高級空飛ぶ箒", "冷蔵庫", "特産品なし",
+"猫尿を飲む猫砂虫", "万能魔法ナイフ", "安物の見習い魔法杖", "密輸ドラゴンエッグ", "魔法飛行船コア",
+"高級キャットニップ", "防ワキガ族マスク", "古神残骸抽出装置", "飛行船燃料製造機"];
+const TRIBE_SPECIALTIES = ["野生バナナ酒", "巨石のお守り", "干しトカゲ肉", "謎のキノコ粉", "手作り獣皮太鼓",
+"祖霊の木彫り", "発酵魚醤", "ピンクの羽根飾り", "魔術師の薬草袋（成分不明）", "変な骨の首飾り",
+"おなら笛（放屁の音が美しくなる）", "猫目石のネックレス", "酋長のうんち", "特に変な特産品はない", "激辛クモ干し",
+"怪しいタバコ", "その辺で拾った石", "異様に真っ直ぐな木の棒", "コウモリのミイラ", "不気味な人形",
+"何の動物かわからない頭蓋骨の器", "モグラ叩きハンマー", "ヤッドゥ（干した象の陰茎で作る楽器）", "燃料軍団が捨てたコーラ瓶"];
+const WRITINGS = ["象形文字", "聖画文字", "音節文字", "エルフ魔法ルーン", "カピバラ結縄文字",
+"38文字アルファベット", "声調付き38文字アルファベット", "羽根文字", "樹皮文字", "暗号",
+"貝殻文字", "線形文字", "古代星象文字", "隣国の文字を流用", "アルファベット風の奇妙な文字",
+"奇妙なアルファベット", "点字", "簡易絵文字", "歩く本", "猫人の獣爪文字",
+"竜族の牙骨文字", "板を逆さにして読む文字", "砂絵文字", "パンダ人の漢字＋アルファベット混合文字", "文字を持たない",
+"歯車文字", "機械記号", "数百種類の文字", "古代機械人十六進文字", "古代機械人二進文字",
+"手話", "旗信号", "尿文字", "数千種類の文字", "彩色文字",
+"音楽記号文字", "魂写文字", "古代機械人螺旋文字", "37文字アルファベット", "ファウヌス文字",
+"蜘蛛の巣文字", "うんち落書き文字", "楔形粘土板文字", "羊皮紙文字", "様々な角度の便器に見える文字",
+"アンデッド青銅文字", "漫画タコ文字", "迷宮文字", "神託文字", "祭司石柱文字",
+"簡体パンダ文字", "オタマジャクシ文字", "ドワーフルーン", "オーク刻文", "巨人立体文字",
+"ゴブリン文字", "様々な角度の貝殻に見える文字", "繁体パンダ文字", "古神文字", "バネのような文字", "甲骨文字","解読不能な古代文字","星図式"];
+const RACES = ["人族", "エルフ", "ドワーフ", "ゴブリン",
+"猫人族", "竜人族", "巨人族", "ファウヌス",
+"パンダ人", "ワキガ族", "カピバラ人",
+"アンデッド", "古代機械人"];
+const CAT_QUOTES = [
+ "ニャー、飛行船の燃料が古神の残骸から作られとるん知らん人もおるんやな。",
+"ニャー、この前のカピバラたちはほんまにええ奴らやったわ。",
+"ニャー、これ発酵サメの匂いやろか？それともワキガ族がおるんか？",
+"ニャー、今回は誰かの畑に突っ込まんといてや。あほな魔女の代わりに謝るんはもう嫌や。",
+"ニャー、経験上な、{witch_name}が『たぶん大丈夫』言うた時が一番危ないんや。",
+"ニャー！ほんまにそれ買うんか？前の『絶対安全飛行薬』なんか火山に突っ込みかけたやん。",
+"{witch_name}、はよ寝ぇや。航路は見といたる。別に心配しとるわけちゃうで。",
+"ニャー、あいつ？どう見ても怪しいやろ。笑顔が眩しすぎる奴は信用したらあかん。",
+"ニャー……なんや知らんけど誰かに見られとる気ぃする。",
+"ニャー、{witch_name}、腹減ったわ。",
+"ニャー、今日は昼寝日和やな。",
+"ニャー、前の方に魚がおる気がするわ。",
+"ニャー、それが燃料軍団から高い金出して買うた燃料か？猫草何袋分やろな。",
+"ニャー、ここあんまり好きやないわ。",
+"ニャー……なんや知らんけど誰かに見られとる気ぃする。",
+"ニャー、別に付き添いたいわけちゃう。お前一人やと飛行船ごと海に落ちそうやからや。",
+"ニャー！また毛がごっそり抜けたやん！",
+"ニャー、{witch_name}！先に猫砂掃除してや！",
+"ニャー、{witch_name}、缶詰持ってきたんか？",
+"ニャー、古代機械人はみんな自分を人族やと思っとるんや。",
+"ニャー、古神の残骸がある所には必ず燃料軍団がおる。",
+"ニャー、統計によるとな、『今回の航路は簡単や』言うた時は事故率が三倍になるんや。",
+"ニャー、前から言うとるやろ。それは緊急着陸やなくて墜落や。ただ運よく草原に落ちただけや。",
+"ニャー、{witch_name}、猫草持っとるか？",
+"ニャー、やっぱりこの前の竜乳チーズが一番やな。"
+];
+const seaScenes = [
+    {
+        name: "古代機械灯台遺跡",
+        comment: "ニャー、この数字や文字は古代機械人の十六進文字みたいやな。"
+    },
+
+    {
+        name: "沈没船の残骸",
+        comment: "ニャー、下に沈没船があるみたいや。お宝があるかもしれへんな。"
+    },
+
+    {
+        name: "発光クラゲの群れ",
+        comment: "海面が星を撒いたみたいにキラキラ光っとる。"
+    },
+
+    {
+        name: "謎の黒い三角海域",
+        comment: "ニャー……なんか見られとる気がする。って、この座標やん！逃げるで！"
+    },
+
+    {
+        name: "海洋ゴミ漂流帯",
+        comment: "ニャー……ゴミでできた島やん。気持ち悪いわ。こんなに海に捨てとったんか。"
+    },
+
+    {
+        name: "巨大古神残骸油田",
+        comment: "ニャー……見てみ！黒い残骸の上で無数の目玉がうごめいとる。燃料軍団もそのうち来るで。"
+    },
+
+    {
+        name: "石林の湾",
+        comment: "無数の石灰岩の尖峰が海から突き出し、まるで竜の牙みたいや。"
+    },
+
+    {
+        name: "翡翠群島",
+        comment: "何百もの緑の島々が海に散らばり、まるで翡翠が浮かんどるみたいや。"
+    },
+
+    {
+        name: "霧の岩礁群",
+        comment: "灰色の霧が年中漂い、岩礁がぼんやりと姿を見せる。"
+    },
+
+    {
+        name: "竜骨峰群",
+        comment: "黒い岩峰が長い蛇のように並び、眠る巨竜の背骨みたいや。"
+    },
+
+    {
+        name: "浮遊島の湾",
+        comment: "一部の岩石が空中に浮かび、海面に巨大な影を落としている。"
+    },
+
+    {
+        name: "巨鯨の墓場",
+        comment: "巨大な鯨の白骨が海面に漂い、静かな骨の森を作っとる。"
+    },
+
+    {
+        name: "火山群島",
+        comment: "黒い火山島から白煙が上がり、海水が煮えたぎっとる。"
+    },
+
+    {
+        name: "珊瑚迷宮",
+        comment: "色鮮やかな珊瑚が海中で迷宮を作り、魚たちが泳ぎ回っとる。"
+    },
+
+    {
+        name: "氷山海",
+        comment: "巨大な青白い氷山が漂い、冷気が壁みたいに押し寄せてくる。"
+    },
+
+    {
+        name: "竜眠湾",
+        comment: "異様に静かな湾や。古竜が海底で眠っとるという伝説がある。"
+    },
+
+    {
+        name: "底なし神殿ブルーホール",
+        comment: "巨大な青い穴が海に口を開け、その脇にはワキガ族の神殿が建っとる。"
+    },
+
+    {
+        name: "深淵の目ブルーホール",
+        comment: "巨大な目玉のような海穴や。海水がゆっくり渦を巻いとる。"
+    },
+
+    {
+        name: "竜神の瞳ブルーホール",
+        comment: "古竜が落ちてできたという伝説の穴や。竜人の神殿も見えるで。"
+    },
+
+    {
+        name: "古神残骸海底火山",
+        comment: "目玉付きの古神残骸が海面に浮かび、深海から低い轟音が響いてくる。"
+    },
+
+    {
+        name: "永夜海域",
+        comment: "厚い黒雲に覆われ、ほとんど陽の光が届かへん。"
+    },
+
+    {
+        name: "蛍光海",
+        comment: "波の一つ一つが青緑色に輝き、夜にはまるで天の川や。"
+    },
+
+    {
+        name: "深海ブルーホール",
+        comment: "海の中央に巨大な青い穴が開いとる。底は見えへん。"
+    },
+
+    {
+        name: "三日月環礁",
+        comment: "白い砂州が三日月形を描き、中央の潟湖は夢みたいな青色や。"
+    },
+
+    {
+        name: "千環の海",
+        comment: "大小さまざまな環礁が散らばり、巨人の翡翠の首飾りみたいや。"
+    },
+
+    {
+        name: "竜環礁",
+        comment: "珊瑚の島々が巨大な竜の形を描いとる。"
+    },
+
+    {
+        name: "星環群島",
+        comment: "五つの環礁が星形に並び、古代機械人の遺跡も残っとる。"
+    },
+
+    {
+        name: "沈んだ王国の環礁",
+        comment: "透き通る海の底に、古いエルフ都市の遺跡が眠っとる。"
+    },
+
+    {
+        name: "虹の環礁",
+        comment: "色とりどりの珊瑚が輪になり、海に虹が落ちたみたいや。"
+    },
+
+    {
+        name: "燃料軍団深淵エネルギー集団支部",
+        comment: "巨大な人工島と無数の油井。燃料軍団の不沈要塞と呼ばれとる。"
+    },
+
+    {
+        name: "燃料軍団連合エネルギー会社",
+        comment: "古神の残骸から黒い燃料を吸い上げ続ける巨大施設や。"
+    },
+
+    {
+        name: "燃料軍団飛行船艦隊支部",
+        comment: "ニャー……大砲と飛行船だらけや。うちらはカモメのふりしとこ。"
+    },
+
+    {
+        name: "燃料軍団海軍基地",
+        comment: "重武装飛行船と鋼鉄戦艦が並ぶ巨大軍港や。"
+    }
+];
+
+const RARE_EVENTS_BASE = [
+  "★ 浮遊島を発見した",
+  "★ 巨大なドラゴンが空を横切るのを見た",
+  "★ 燃料軍団の巨大飛行船艦隊を目撃した",
+  "★ 飛行船が三日連続で山に衝突しなかった",
+  "★ 謎の地図を拾ったが、ワキガ族の子供の落書きだった",
+  "★ カピバラたちの大喧嘩を目撃した",
+  "★ 古代機械人たちが整列して地面に横たわっていた",
+  "★ エルフ貴族が飛行船の上で立ちションしていた",
+  "★ 雲の上に巨大機械を見たが、一瞬で消えた",
+  "★ カピバラの旅行飛行船が通り過ぎ、帽子を取って挨拶してくれた",
+  "★ 無人のボロボロな幽霊飛行船を目撃した",
+  "★ 宝箱を開けたら『お前はバカだ！』と書かれた紙が入っていた",
+  "★ 嵐が迫ってきた！黒猫が鋭く鳴いて警告してくれた。何とか回避できた。",
+  "★ 謎の飛行物体と遭遇した！すぐに視界から消えてしまった。",
+  "★ 海賊船に見つかりそうになった。黒猫が帆を噛み切って逃げ切った。",
+  "★ 流星群の中を飛んだ！飛行船に小石が当たったが無事だ。",
+  "★ 巨大な雲の城を発見したが、近づくと消えてしまった。蜃気楼か？",
+  "★ 黒猫が夢を見た。明日は吉日らしい。",
+  "★ 古い瓶詰めの手紙を発見した。読めない言語で書かれている。",
+  "★ 渡り鳥の群れが飛行船の周りを飛んだ。何かの前兆か？"
+];
+const CAT_WEATHER = {
+  equator: ["ニャー、赤道付近は暑すぎる、毛が爆発しそう。"],
+  tropical: ["ニャー、ここは暑い、魚が焼けそう。","ニャー、熱帯の風がべたつく。","ニャー、飛行船の影に隠れたい。"],
+  temperate: ["ニャー、ここの気候はちょうどいい、昼寝に最適。","ニャー、風が気持ちいい。","ニャー、ここには人間の街がたくさんありそう。"],
+  cold: ["ニャー、少し寒い、魔女のマントに潜り込みたい。","ニャー、風が冷たくなってきた。","ニャー、ここの雲は氷みたいに見える。"],
+  polar: ["ニャー、寒い！猫砂まで凍ってしまった。","ニャー、もう極地には飛んでこないぞ。","ニャー、ここは猫が来る場所じゃない。"]
+};
+const VAGUE_WORDS = ["なんか匂いがする","風にかすかに感じる","ひげが感じ取った","星が指し示しているような","自信はないけど、たぶん"];
+
+// ═══════════════════════════════════════════════════════
+// GAME ENGINE
+// ═══════════════════════════════════════════════════════
+const STEP = 10, LAT_LIMIT = 70;
+
+let world = {}, player = {}, lat = 0, lon = 0;
+let currentQuest = null, stepsAfterQuest = 0, moveCount = 0, findCount = 0;
+let rareEvents = [];
+let typewriterTimeout = null;
+
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rndInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+
+function makeCountryName() { return rnd(NAME_FRONT) + rnd(NAME_FRONT) + rnd(NAME_BACK); }
+function makeTribeName()   { return rnd(NAME_FRONT) + rnd(NAME_FRONT); }
+
+function makeRacePercent() {
+  const count = rndInt(1, 12);
+  const chosen = [...RACES].sort(() => Math.random() - 0.5).slice(0, count);
+  const nums = chosen.map(() => rndInt(1, 100));
+  const total = nums.reduce((a, b) => a + b, 0);
+  const result = {};
+  let remaining = 100;
+  chosen.forEach((race, i) => {
+    if (i === count - 1) { result[race] = remaining; }
+    else {
+      let p = Math.round(nums[i] / total * 100);
+      p = Math.max(1, Math.min(p, remaining - 1));
+      result[race] = p;
+      remaining -= p;
+    }
+  });
+  return result;
+}
+
+function makeCountry() {
+  return { type: "国家", name: makeCountryName(), size: rndInt(2, 11),
+    system: rnd(CIVIL_SYSTEMS), rumor: rnd(RUMORS), specialty: rnd(SPECIALTIES),
+    races: makeRacePercent(), writing: rnd(WRITINGS) };
+}
+function makeTribe() {
+  return { type: "部族", name: makeTribeName(), size: 1,
+    system: rnd(TRIBE_SYSTEMS), rumor: rnd(TRIBE_RUMORS), specialty: rnd(TRIBE_SPECIALTIES),
+    race: rnd(RACES) };
+}
+
+function allCoords() {
+  const c = [];
+  for (let la = -60; la < 70; la += 10)
+    for (let lo = -180; lo <= 180; lo += 10)
+      c.push([la, lo]);
+  return c;
+}
+
+function neighbors(la, lo) {
+  const result = [];
+  for (const [dla, dlo] of [[10,0],[-10,0],[0,10],[0,-10]]) {
+    let nla = la + dla, nlo = lo + dlo;
+    if (nla >= LAT_LIMIT || nla <= -LAT_LIMIT) continue;
+    if (nlo > 180) nlo = -170;
+    else if (nlo < -180) nlo = 170;
+    result.push([nla, nlo]);
+  }
+  return result;
+}
+
+function key(la, lo) { return `${la},${lo}`; }
+
+function growLand(w, start, size, terrain) {
+  const land = new Set([key(...start)]);
+  const frontier = [start];
+  while (land.size < size && frontier.length) {
+    const cur = frontier[Math.floor(Math.random() * frontier.length)];
+    const ns = neighbors(...cur).sort(() => Math.random() - 0.5);
+    let added = false;
+    for (const n of ns) {
+      if (!land.has(key(...n))) { land.add(key(...n)); frontier.push(n); added = true; break; }
+    }
+    if (!added) frontier.splice(frontier.indexOf(cur), 1);
+  }
+  for (const k of land) w[k].terrain = terrain;
+  return [...land];
+}
+
+function growSiteOnLand(w, start, size, siteData) {
+  const territory = new Set([key(...start)]);
+  const frontier = [start];
+  while (territory.size < size && frontier.length) {
+    const cur = frontier[Math.floor(Math.random() * frontier.length)];
+    const ns = neighbors(...cur).sort(() => Math.random() - 0.5);
+    let added = false;
+    for (const n of ns) {
+      const k = key(...n);
+      if (!territory.has(k) && w[k].terrain === "大陸" && w[k].site === null) {
+        territory.add(k); frontier.push(n); added = true; break;
+      }
+    }
+    if (!added) frontier.splice(frontier.indexOf(cur), 1);
+  }
+  for (const k of territory) w[k].site = siteData;
+}
+
+function generateWorld() {
+  const w = {};
+  for (const c of allCoords()) w[key(...c)] = { terrain:"海域", site:null, sea_scene:null, discovered:false };
+
+  const continentCount = rndInt(5, 10);
+  const islandCount = rndInt(70, 200);
+  const coords = allCoords();
+
+  for (let i = 0; i < continentCount; i++) {
+    const start = rnd(coords);
+    growLand(w, start, rndInt(5, 60), "大陸");
+  }
+
+  let seaCoords = coords.filter(c => w[key(...c)].terrain === "海域");
+  for (let i = 0; i < islandCount; i++) {
+    if (!seaCoords.length) break;
+    const idx = Math.floor(Math.random() * seaCoords.length);
+    const c = seaCoords[idx];
+    w[key(...c)].terrain = "島";
+    seaCoords.splice(idx, 1);
+  }
+
+  const landCells = coords.filter(c => w[key(...c)].terrain === "大陸").sort(() => Math.random() - 0.5);
+  for (const c of landCells) {
+    const k = key(...c);
+    if (w[k].site !== null) continue;
+    const roll = Math.random();
+    if (roll < 0.25) {
+      const country = makeCountry();
+      growSiteOnLand(w, c, country.size, country);
+    } else if (roll < 0.45) {
+      w[k].site = makeTribe();
+    } else {
+      w[k].site = rnd(["森", "山脈", "砂漠", "湖"]);
+    }
+  }
+
+  for (const k of Object.keys(w)) {
+    if (w[k].terrain === "島") w[k].site = Math.random() < 0.45 ? makeTribe() : "無人島";
+    if (w[k].terrain === "海域" && Math.random() < 0.20) w[k].sea_scene = rnd(seaScenes);
+  }
+  return w;
+}
+
+function makeQuest(w) {
+  const targets = [];
+  for (const [k, cell] of Object.entries(w))
+    if (cell.site && cell.site.type === "国家") targets.push([k, cell.site]);
+  const [, site] = rnd(targets);
+  const targetCoords = Object.entries(w).filter(([,c]) => c.site === site).map(([k]) => k);
+  const questType = Math.random() < 0.5 ? "specialty" : "rumor";
+  const target = site[questType];
+  const label = questType === "specialty" ? "特産品" : "噂";
+  return { type: questType, target, targetCoords, text: `クエスト：${label}が「${target}」の国家を見つけよ。` };
+}
+
+function checkQuest(la, lo, q) {
+  const cell = world[key(la, lo)];
+  if (!cell || !cell.site || typeof cell.site !== "object") return false;
+  return cell.site[q.type] === q.target;
+}
+
+function questHint(la, lo, q) {
+  const dist = k => { const [a,b] = k.split(",").map(Number); return Math.abs(a - la) + Math.abs(b - lo); };
+  const closest = q.targetCoords.reduce((a, b) => dist(a) < dist(b) ? a : b);
+  const [tla, tlo] = closest.split(",").map(Number);
+  let dir = "";
+  if (tla > la) dir += "北"; else if (tla < la) dir += "南";
+  if (tlo > lo) dir += "東"; else if (tlo < lo) dir += "西";
+  if (!dir) return `${player.cat}：ニャー！目標はここだ！`;
+  return `${player.cat}：ニャー、${rnd(VAGUE_WORDS)}、目標は${dir}の方角だ。`;
+}
+
+function catWeather(la) {
+  const a = Math.abs(la);
+  if (a === 0) return rnd(CAT_WEATHER.equator);
+  if (a <= 20) return rnd(CAT_WEATHER.tropical);
+  if (a <= 40) return rnd(CAT_WEATHER.temperate);
+  if (a <= 60) return rnd(CAT_WEATHER.cold);
+  return rnd(CAT_WEATHER.polar);
+}
+
+function coordText(la, lo) {
+  const latText = la > 0 ? `北緯${la}°` : la < 0 ? `南緯${Math.abs(la)}°` : "赤道";
+  const lonText = lo > 0 ? `東経${lo}°` : lo < 0 ? `西経${Math.abs(lo)}°` : "本初子午線";
+  return `${latText} / ${lonText}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// UI UPDATES
+// ═══════════════════════════════════════════════════════
+const TERRAIN_COLORS = {
+  "海域":"#4a7fa5","大陸":"#7a9e5f","島":"#a8b870","国家":"#c06030",
+  "部族":"#9060a0","森":"#4a7a40","山脈":"#8a7a6e","砂漠":"#c8a85a",
+  "湖":"#5a9ab0","無人島":"#c8b870"
+};
+
+function typewriter(el, text, speed = 28) {
+  if (typewriterTimeout) clearTimeout(typewriterTimeout);
+  el.innerHTML = "";
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  el.appendChild(cursor);
+  function tick() {
+    if (i < text.length) {
+      el.insertBefore(document.createTextNode(text[i++]), cursor);
+      typewriterTimeout = setTimeout(tick, speed);
+    } else { cursor.remove(); }
+  }
+  tick();
+}
+
+function updateMap() {
+  const canvas = document.getElementById("map-canvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const cols = 37, rows = 14;
+  const cw = W / cols, ch = H / rows;
+
+  ctx.fillStyle = "#3a6e98";
+  ctx.fillRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 0.5;
+  for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(c * cw, 0); ctx.lineTo(c * cw, H); ctx.stroke(); }
+  for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(0, r * ch); ctx.lineTo(W, r * ch); ctx.stroke(); }
+
+  for (const [k, cell] of Object.entries(world)) {
+    if (!cell.discovered) continue;
+    const [la, lo] = k.split(",").map(Number);
+    const col = (lo + 180) / 10;
+    const row = rows - 1 - (la + 60) / 10;
+    const x = col * cw, y = row * ch;
+
+    let color = TERRAIN_COLORS[cell.terrain] || "#4a7fa5";
+    if (cell.site && typeof cell.site === "object") {
+      color = cell.site.type === "国家" ? TERRAIN_COLORS["国家"] : TERRAIN_COLORS["部族"];
+    } else if (typeof cell.site === "string") {
+      color = TERRAIN_COLORS[cell.site] || color;
+    }
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+
+    if (typeof cell.site === "object" && cell.site && cell.site.name) {
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = `${Math.max(6, cw * 0.45)}px 'Noto Serif JP', serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(cell.site.name[0], x + cw / 2, y + ch * 0.72);
+    }
+  }
+
+  // current position
+  const curCol = (lon + 180) / 10;
+  const curRow = rows - 1 - (lat + 60) / 10;
+  const cx = curCol * cw + cw / 2, cy = curRow * ch + ch / 2;
+  ctx.fillStyle = "#e03030";
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.min(cw, ch) * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // airship icon
+  ctx.fillStyle = "#fff";
+  ctx.font = `${Math.max(9, cw * 0.55)}px serif`;
+  ctx.textAlign = "center";
+  ctx.fillText("✈", cx, cy + cw * 0.22);
+}
+
+function updateInfo() {
+  document.getElementById("coord-display").textContent = coordText(lat, lon);
+
+  const cell = world[key(lat, lon)];
+  const badge = document.getElementById("terrain-badge");
+  badge.textContent = cell.terrain;
+  badge.style.background = TERRAIN_COLORS[cell.terrain] || "#4a7fa5";
+
+  const siteEl = document.getElementById("site-info");
+  const site = cell.site;
+
+  if (!site) {
+    if (cell.sea_scene) {
+      siteEl.innerHTML = `<div class="site-name">⚓ ${cell.sea_scene.name}</div><div style="color:var(--ink-faded);font-style:italic">${cell.sea_scene.comment}</div>`;
+    } else {
+      siteEl.innerHTML = `<span style="color:var(--ink-faded);font-style:italic">雲と海と遠くの霧しか見えない</span>`;
+    }
+  } else if (typeof site === "string") {
+    const icons = {"森":"🌲","山脈":"⛰","砂漠":"🏜","湖":"🏞","無人島":"🏝"};
+    siteEl.innerHTML = `<div class="site-name">${icons[site]||"◆"} ${site}</div>`;
+  } else if (site.type === "国家") {
+    let raceHtml = '<div class="race-bar-wrap">';
+    const hues = [0,30,60,120,180,200,240,270,300,330,15,45];
+    let i = 0;
+    for (const [race, pct] of Object.entries(site.races)) {
+      const hue = hues[i++ % hues.length];
+      raceHtml += `<div class="race-row"><span class="race-name">${race}</span><div class="race-bar-bg"><div class="race-bar-fill" style="width:${pct}%;background:hsl(${hue},55%,45%)"></div></div><span class="race-pct">${pct}%</span></div>`;
+    }
+    raceHtml += '</div>';
+    siteEl.innerHTML = `
+      <div class="site-name">🏛 ${site.name}</div>
+      <div><span class="label">体制：</span>${site.system}</div>
+      <div><span class="label">噂：</span>${site.rumor}</div>
+      <div><span class="label">特産品：</span>${site.specialty}</div>
+      <div><span class="label">文字：</span>${site.writing}</div>
+      <div><span class="label">規模：</span>${site.size}格</div>
+      ${raceHtml}`;
+  } else if (site.type === "部族") {
+    siteEl.innerHTML = `
+      <div class="site-name">🔥 ${site.name}</div>
+      <div><span class="label">体制：</span>${site.system}</div>
+      <div><span class="label">噂：</span>${site.rumor}</div>
+      <div><span class="label">特産品：</span>${site.specialty}</div>
+      <div><span class="label">種族：</span>${site.race}</div>`;
+  }
+
+  // stats
+  const discovered = Object.values(world).filter(c => c.discovered).length;
+  const total = Object.keys(world).length;
+  document.getElementById("explore-pct").textContent = (discovered / total * 100).toFixed(1) + "%";
+  document.getElementById("move-count").textContent = moveCount;
+  document.getElementById("find-count").textContent = findCount;
+}
+
+function updateQuest() {
+  document.getElementById("quest-text").textContent = currentQuest.text;
+  document.getElementById("quest-hint").textContent = questHint(lat, lon, currentQuest);
+}
+
+function addLog(text, type = "") {
+  const log = document.getElementById("event-log");
+  const el = document.createElement("div");
+  el.className = "log-entry" + (type ? " " + type : "");
+  el.textContent = text;
+  log.prepend(el);
+  if (log.children.length > 80) log.lastChild.remove();
+}
+
+function catSay(text, speed = 28) {
+  typewriter(document.getElementById("cat-dialog"), text, speed);
+}
+
+function buildCatMessage(cell) {
+  let lines = [];
+  lines.push(catWeather(lat));
+  if (Math.random() < 0.4) {
+    let q = rnd(CAT_QUOTES).replace("{witch_name}", player.witch).replace("{cat_name}", player.cat);
+    lines.push(q);
+  }
+  const site = cell.site;
+  if (typeof site === "string") {
+    const msgs = {
+      "森": `${player.cat}：ニャー、下の森が大きな緑のじゅうたんみたい。`,
+      "山脈": `${player.cat}：ニャー、山が高すぎる、飛行船がぶつからないように注意して。`,
+      "砂漠": `${player.cat}：ニャー、下は砂だらけ、魚なんていない。`,
+      "湖": `${player.cat}：ニャー、湖が青い鏡みたい。`,
+      "無人島": `${player.cat}：ニャー、日向ぼっこには最適、でも缶詰はない。`
+    };
+    if (msgs[site]) lines.push(msgs[site]);
+  } else if (site && site.type === "国家") {
+    lines.push(`${player.cat}：ニャー、この国はなんかおかしそう。`);
+  } else if (site && site.type === "部族") {
+    lines.push(`${player.cat}：ニャー、${player.witch}、早く飛び去った方がいい？`);
+  } else if (!site) {
+    if (!cell.sea_scene) lines.push(`${player.cat}：ニャー……ここには何もない。`);
+  }
+  return lines.join("\n");
+}
+
+function describeCell() {
+  const cell = world[key(lat, lon)];
+  if (!cell.discovered) { cell.discovered = true; findCount++; }
+  updateInfo();
+  updateMap();
+  catSay(buildCatMessage(cell));
+
+  const site = cell.site;
+  if (site && typeof site === "object") {
+    addLog(`📍 ${coordText(lat, lon)} — ${site.type}「${site.name}」を発見`, "highlight");
+  } else if (typeof site === "string") {
+    addLog(`📍 ${coordText(lat, lon)} — 「${site}」を発見`, "highlight");
+  } else if (cell.sea_scene) {
+    addLog(`📍 ${coordText(lat, lon)} — 特殊海域「${cell.sea_scene.name}」`, "highlight");
+  } else {
+    addLog(`📍 ${coordText(lat, lon)} — ${cell.terrain}`);
+  }
+}
+
+function doMove(direction) {
+  let nla = lat, nlo = lon;
+  if (direction === "N") { nla = lat + STEP; if (nla >= LAT_LIMIT) { catSay(`${player.cat}：ニャー、北極は怖すぎる！これ以上北には行けない。`); return; } }
+  else if (direction === "S") { nla = lat - STEP; if (nla <= -LAT_LIMIT) { catSay(`${player.cat}：ニャー、南極は怖すぎる！これ以上南には行けない。`); return; } }
+  else if (direction === "E") { nlo = lon + STEP; if (nlo > 180) nlo = -170; }
+  else if (direction === "W") { nlo = lon - STEP; if (nlo < -180) nlo = 170; }
+
+  lat = nla; lon = nlo; moveCount++;
+  stepsAfterQuest++;
+  describeCell();
+  updateQuest();
+
+  if (checkQuest(lat, lon, currentQuest)) {
+    addLog(`★ クエスト達成！「${currentQuest.target}」の国家を発見！`, "quest");
+    const flash = document.getElementById("quest-flash");
+    flash.classList.add("show");
+    setTimeout(() => flash.classList.remove("show"), 2100);
+    currentQuest = makeQuest(world);
+    stepsAfterQuest = 0;
+    updateQuest();
+    addLog(`✦ 新しいクエスト：${currentQuest.text}`, "quest");
+  } else if (stepsAfterQuest % 5 === 0) {
+    const hint = questHint(lat, lon, currentQuest);
+    addLog(`🐾 黒猫の占い：${hint}`);
+  }
+
+  if (rareEvents.length && Math.random() < 0.06) {
+    const ev = rnd(rareEvents);
+    rareEvents.splice(rareEvents.indexOf(ev), 1);
+    addLog(ev, "quest");
+    catSay(`${player.cat}：ニャー！${ev.replace(/^★ /,"")}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+function openModal(id)  { document.getElementById(id).classList.add("active"); }
+
+function showDiscoveredList() {
+  const el = document.getElementById("modal-log-content");
+  const discovered = Object.entries(world)
+    .filter(([,c]) => c.discovered)
+    .sort(([a],[b]) => a.localeCompare(b));
+  if (!discovered.length) { el.innerHTML = "<em>まだ何も発見していない。</em>"; openModal("modal-log"); return; }
+  el.innerHTML = discovered.map(([k, cell]) => {
+    const [la, lo] = k.split(",").map(Number);
+    const site = cell.site;
+    let siteName = "特別な発見なし";
+    if (typeof site === "string") siteName = site;
+    else if (site && site.name) siteName = `${site.type}「${site.name}」`;
+    return `<div style="border-bottom:1px solid var(--parchment-dark);padding:2px 0">${coordText(la,lo)}：${cell.terrain} / ${siteName}</div>`;
+  }).join("");
+  openModal("modal-log");
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function startGame() {
+  const witch = document.getElementById("witch-input").value.trim() || "イザベラ";
+  const cat   = document.getElementById("cat-input").value.trim()   || "クロ";
+  player = { witch, cat };
+
+  world = generateWorld();
+  lat = 0; lon = 0; moveCount = 0; findCount = 0; stepsAfterQuest = 0;
+  rareEvents = [...RARE_EVENTS_BASE];
+  currentQuest = makeQuest(world);
+
+  document.getElementById("start-screen").classList.remove("active");
+  document.getElementById("game-screen").classList.add("active");
+
+  document.getElementById("event-log").innerHTML = "";
+  addLog(`✦ ${witch} と ${cat} が出発した！`, "quest");
+  addLog(`★ 最初のクエスト：${currentQuest.text}`, "quest");
+
+  describeCell();
+  updateQuest();
+  catSay(`${cat}：ニャー、墜落しないでよ、${witch}。`);
+}
+
+// BUTTONS
+document.getElementById("start-btn").addEventListener("click", startGame);
+document.getElementById("witch-input").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("cat-input").focus(); });
+document.getElementById("cat-input").addEventListener("keydown", e => { if (e.key === "Enter") startGame(); });
+document.getElementById("btn-n").addEventListener("click", () => doMove("N"));
+document.getElementById("btn-s").addEventListener("click", () => doMove("S"));
+document.getElementById("btn-e").addEventListener("click", () => doMove("E"));
+document.getElementById("btn-w").addEventListener("click", () => doMove("W"));
+document.getElementById("btn-quest").addEventListener("click", () => updateQuest());
+document.getElementById("btn-hint").addEventListener("click", () => { const h = questHint(lat,lon,currentQuest); catSay(h); addLog(`🐾 ${h}`); });
+document.getElementById("btn-log").addEventListener("click", showDiscoveredList);
+document.getElementById("btn-help").addEventListener("click", () => openModal("modal-help"));
+document.getElementById("btn-new").addEventListener("click", () => {
+  document.getElementById("game-screen").classList.remove("active");
+  document.getElementById("start-screen").classList.add("active");
+});
+
+// KEYBOARD
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("game-screen").classList.contains("active")) return;
+  const map = { n:"N", s:"S", e:"E", w:"W", arrowup:"N", arrowdown:"S", arrowright:"E", arrowleft:"W" };
+  const d = map[e.key.toLowerCase()];
+  if (d) { e.preventDefault(); doMove(d); }
+});
+
+// Close modals on overlay click
+document.querySelectorAll(".modal-overlay").forEach(el => {
+  el.addEventListener("click", evt => { if (evt.target === el) el.classList.remove("active"); });
+});
+</script>
+</body>
+</html>
